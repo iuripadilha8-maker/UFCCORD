@@ -1,27 +1,6 @@
 import os
-import threading
-from flask import Flask
 import discord
 from discord import app_commands
-
-# =========================
-# SERVIDOR WEB PARA O RENDER
-# =========================
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "🥊 UFCCord está online!"
-
-def iniciar_servidor():
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
-
-threading.Thread(target=iniciar_servidor, daemon=True).start()
-
-# =========================
-# BOT DO DISCORD
-# =========================
 
 class UFCCord(discord.Client):
     def __init__(self):
@@ -31,51 +10,56 @@ class UFCCord(discord.Client):
 
     async def setup_hook(self):
         await self.tree.sync()
-        print("✅ Comandos sincronizados!")
 
 bot = UFCCord()
 
 
 @bot.event
 async def on_ready():
-    print(f"🥊 UFCCord conectado como {bot.user}")
+    print(f"🥊 UFCCord online como {bot.user}")
 
 
-# =========================
-# /ufc
-# =========================
-
-@bot.tree.command(name="ufc", description="Mostra informações do UFCCord")
+@bot.tree.command(name="ufc", description="Mostra o UFCCord")
 async def ufc(interaction: discord.Interaction):
-
-    embed = discord.Embed(
-        title="🥊 UFCCord",
-        description="Seu bot de UFC está funcionando!",
+    await interaction.response.send_message(
+        "🥊 **UFCCord** está online!\nUse `/lutador` para consultar um lutador."
     )
 
-    embed.add_field(
-        name="👊 Comandos",
-        value="`/lutador` • `/campeoes` • `/ufc`",
-        inline=False
-    )
 
-    await interaction.response.send_message(embed=embed)
-
-
-# =========================
-# /lutador
-# =========================
-
-@bot.tree.command(name="lutador", description="Mostra informações de um lutador")
+@bot.tree.command(name="lutador", description="Consulta um lutador")
 @app_commands.describe(nome="Nome do lutador")
 async def lutador(interaction: discord.Interaction, nome: str):
 
     lutadores = {
-        "jon jones": {
-            "categoria": "Peso-pesado",
-            "cartel": "28-1-0",
-            "estilo": "Wrestling / MMA"
-        },
-        "alex pereira": {
-            "categoria": "Meio-pesado",
-            "cartel": "28-1-0",
+        "jon jones": "🥊 Jon Jones\n🏆 Peso-pesado\n📊 Cartel: 28-1-0",
+        "alex pereira": "🥊 Alex Pereira\n🏆 Meio-pesado\n📊 Cartel: 13-3-0",
+        "islam makhachev": "🥊 Islam Makhachev\n🏆 Meio-médio\n📊 Cartel: 28-1-0"
+    }
+
+    resultado = lutadores.get(nome.lower())
+
+    if resultado:
+        await interaction.response.send_message(resultado)
+    else:
+        await interaction.response.send_message(
+            f"❌ Não encontrei **{nome}**."
+        )
+
+
+@bot.tree.command(name="campeoes", description="Mostra os campeões")
+async def campeoes(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        "🏆 **CAMPEÕES UFC**\n\n"
+        "🥊 Peso-pesado — A definir\n"
+        "⚡ Meio-pesado — A definir\n"
+        "🔥 Meio-médio — A definir\n"
+        "🥋 Leve — A definir"
+    )
+
+
+TOKEN = os.environ.get("DISCORD_TOKEN")
+
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN não foi configurado no Render.")
+
+bot.run(TOKEN)
