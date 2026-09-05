@@ -78,4 +78,4 @@ async def lutador(interaction: discord.Interaction, nome: str):
         },
         "alex pereira": {
             "categoria": "Meio-pesado",
-            "cartel
+            "cartel": "28-1-0",
